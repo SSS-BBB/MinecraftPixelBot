@@ -20,28 +20,54 @@ bot.on("chat", (username, message) => {
     }
 })
 
-function placeBlockAt(position, faceVector = { x: 0, y: 1, z: 0 }) {
+let placing = false
+
+function holdItem(itemName) {
+    const item = bot.inventory.items().find(item => item.name.toLowerCase().includes(itemName))
+    if (item) {
+        bot.equip(item, "hand")
+        return true
+    }
+
+    bot.chat(`No ${itemName} in my inventory.`)
+    placing = false
+    return false
+}
+
+function placeBlockAt(p, faceVector={ x: 0, y: 1, z: 0 }, placeBlockName="stone") {
+    if (placing) {
+        bot.chat("I am placing other blocks.")
+        return
+    }
+
+    placing = true
+    let position = p.clone()
     // Move To Nearby Block
     bot.pathfinder.setMovements(new Movements(bot, bot.mcData))
-    bot.pathfinder.setGoal(new goals.GoalBlock(position.x, position.y, position.z))
+    bot.pathfinder.setGoal(new goals.GoalNear(position.x, position.y, position.z, 0), false)
 
     setTimeout(async () => {
+        // Moving
         const t1 = new Date().getTime()
         let t2 = new Date().getTime()
         while(bot.pathfinder.isMoving()) {
             t2 = new Date().getTime()
-            if (t2 - t1 > 5000) break
+            if (t2 - t1 > 10000) {
+                bot.chat("Too long...")
+                break
+            }
+
+            // bot.chat(bot.entity.position.distanceTo(position).toString())
 
             await bot.waitForTicks(1)
         }
-    
+        bot.pathfinder.stop()
+        bot.pathfinder.setGoal(null)
+        
         // Place block
-        let sourceBlock = bot.blockAt(bot.entity.position.offset(0, 0, 1.5))
-        let checkBlock = bot.blockAt(sourceBlock.position.offset(faceVector.x, faceVector.y, faceVector.z))
-        if (checkBlock.name !== "air") {
-            bot.chat("Cannot place here.")
-            return
-        }
+        if (!holdItem(placeBlockName)) return
+
+        let sourceBlock = bot.blockAt(bot.entity.position.offset(1, 0, 0))
 
         try {
             await bot.placeBlock(sourceBlock, faceVector)
@@ -51,5 +77,7 @@ function placeBlockAt(position, faceVector = { x: 0, y: 1, z: 0 }) {
                 console.log(err)
             }
         }
+
+        placing = false
     }, 150)
 }
