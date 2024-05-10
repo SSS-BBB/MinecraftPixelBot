@@ -45,7 +45,7 @@ bot.on("chat", async (username, message) => {
     }
 
     if (message.toLowerCase() === "create grid") {
-        createGrid(3, 3, player.entity.position)
+        createGrid(16, 16, player.entity.position)
     }
 })
 
@@ -59,11 +59,37 @@ function holdItem(itemName) {
     }
 
     bot.chat(`No ${itemName} in my inventory.`)
-    placing = false
+    placing = true
     return false
 }
 
-async function placeBlockAt(p, backward=false, faceVector={ x: 0, y: 1, z: 0 }, placeBlockName="stone") {
+function getRandomBlock() {
+    const blocks = bot.inventory.items()
+
+    if (blocks.length > 0) {
+        const length = blocks.length
+        const randIndex = Math.floor(Math.random() * length)
+        return blocks[randIndex].name
+    }
+    return false
+}
+
+function timeout(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function tryPlaceBlock(sourceBlock, faceVector) {
+    try {
+        await bot.placeBlock(sourceBlock, faceVector)
+    }
+    catch (err) {
+        if (!err.message.includes("Event") || !err.message.includes("did not fire within timeout")) {
+            console.log(err)
+        }
+    }
+}
+
+async function placeBlockAt(p, backward=false, placeBlockName="stone", faceVector={ x: 0, y: 1, z: 0 }) {
     if (placing) {
         bot.chat("I am placing other blocks.")
         return
@@ -89,16 +115,10 @@ async function placeBlockAt(p, backward=false, faceVector={ x: 0, y: 1, z: 0 }, 
         sourceBlock = bot.blockAt(bot.entity.position.offset(-1, -1, 0))
     }
 
+    // await timeout(500)
     placing = false
 
-    try {
-        await bot.placeBlock(sourceBlock, faceVector)
-    }
-    catch (err) {
-        if (!err.message.includes("Event") || !err.message.includes("did not fire within timeout")) {
-            console.log(err)
-        }
-    }
+    tryPlaceBlock(sourceBlock, faceVector)
 }
 
 async function createGrid(row_num, col_num, sPos) {
@@ -107,9 +127,16 @@ async function createGrid(row_num, col_num, sPos) {
         let currentPos
         for (let c = 0; c < col_num; c++) {
             currentPos = startPos.offset(-c-1, r, 0)
-            await placeBlockAt(currentPos)
+            const randBlock = getRandomBlock()
+            if (randBlock) {
+                await placeBlockAt(currentPos, false, randBlock)
+            }
+            else {
+                await placeBlockAt(currentPos, false, "glass")
+            }
+            
         }
         currentPos = startPos.offset(-col_num+1, r+1, 0)
-        await placeBlockAt(currentPos, true)
+        await placeBlockAt(currentPos, true, "glass")
     }
 }
