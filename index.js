@@ -12,7 +12,6 @@ bot.loadPlugin(pathfinder)
 
 bot.once("spawn", () => {
     bot.mcData = require("minecraft-data")(bot.version)
-    createImage()
 })
 
 bot.on("chat", async (username, message) => {
@@ -44,7 +43,7 @@ bot.on("chat", async (username, message) => {
     }
 
     if (message.toLowerCase() === "create image") {
-        createImage()
+        createImage(player.entity.position)
     }
 })
 
@@ -116,7 +115,7 @@ async function placeBlockAt(p, backward=false, placeBlockName="stone", faceVecto
         sourceBlock = bot.blockAt(bot.entity.position.offset(-1, -1, 0))
     }
 
-    // await timeout(500)
+    await timeout(150)
     placing = false
 
     tryPlaceBlock(sourceBlock, faceVector)
@@ -142,8 +141,13 @@ async function createGrid(row_num, col_num, sPos) {
     }
 }
 
-async function createImage() {
-    const pixelData = await getMCBlockFromImg("shapes.png", 32, 32, bot.version)
+async function createImage(sPos) {
+    const row_num = 16
+    const col_num = 16
+
+    const pixelData = await getMCBlockFromImg("black_hole.png", row_num, col_num, bot.version)
+
+    const startPos = sPos.clone()
     for (let r = 0; r < row_num; r++) {
         let currentPos
         for (let c = 0; c < col_num; c++) {
