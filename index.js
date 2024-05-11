@@ -104,7 +104,9 @@ async function placeBlockAt(p, backward=false, placeBlockName="stone", faceVecto
     bot.pathfinder.setGoal(null)
         
     // Place block
-    if (!holdItem(placeBlockName)) return
+    while (!holdItem(placeBlockName)) {
+        await bot.waitForTicks(1)
+    }
 
     let sourceBlock
     if (!backward) {
