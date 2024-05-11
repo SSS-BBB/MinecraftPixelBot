@@ -84,10 +84,12 @@ exports.getMCBlockFromImg =  async function (imagePath, row_size, col_size, mcVe
                     min_wool = wool.name
                 }
             })
-            pixelWoolRow.push(min_wool)
+            pixelWoolRow.push(min_wool + "_wool")
         }
         pixelWoolArray.push(pixelWoolRow)
     }
+
+    // console.log(pixelWoolArray[0])
 
     return pixelWoolArray
 }

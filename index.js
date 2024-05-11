@@ -144,5 +144,21 @@ async function createGrid(row_num, col_num, sPos) {
 
 async function createImage() {
     const pixelData = await getMCBlockFromImg("shapes.png", 32, 32, bot.version)
+    for (let r = 0; r < row_num; r++) {
+        let currentPos
+        for (let c = 0; c < col_num; c++) {
+            currentPos = startPos.offset(-c-1, r, 0)
+            const blockToPlace = pixelData[r][c]
+            if (blockToPlace) {
+                await placeBlockAt(currentPos, false, blockToPlace)
+            }
+            else {
+                await placeBlockAt(currentPos, false, "glass")
+            }
+            
+        }
+        currentPos = startPos.offset(-col_num+1, r+1, 0)
+        await placeBlockAt(currentPos, true, "glass")
+    }
     // console.log(pixelData)
 }
