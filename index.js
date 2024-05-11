@@ -1,23 +1,18 @@
 const mineflayer = require("mineflayer")
 const { pathfinder, Movements, goals } = require("mineflayer-pathfinder")
+const { getMCBlockFromImg } = require("./mc_pixel_image")
 
 const bot = mineflayer.createBot({
     host: "localhost",
-    port: 52137,
+    port: 58952,
     username: "Pixel_Bot"
 })
 
-const testBot = mineflayer.createBot({
-    host: "localhost",
-    port: 52137,
-    username: "Test_Bot"
-})
-
 bot.loadPlugin(pathfinder)
-testBot.loadPlugin(pathfinder)
 
 bot.once("spawn", () => {
     bot.mcData = require("minecraft-data")(bot.version)
+    createImage()
 })
 
 bot.on("chat", async (username, message) => {
@@ -46,6 +41,10 @@ bot.on("chat", async (username, message) => {
 
     if (message.toLowerCase() === "create grid") {
         createGrid(16, 16, player.entity.position)
+    }
+
+    if (message.toLowerCase() === "create image") {
+        createImage()
     }
 })
 
@@ -141,4 +140,9 @@ async function createGrid(row_num, col_num, sPos) {
         currentPos = startPos.offset(-col_num+1, r+1, 0)
         await placeBlockAt(currentPos, true, "glass")
     }
+}
+
+async function createImage() {
+    const pixelData = await getMCBlockFromImg("shapes.png", 32, 32, bot.version)
+    // console.log(pixelData)
 }
